@@ -14,53 +14,77 @@ class CarParkTest extends TestCase
         $database = new Database();
         $this->db = $database->getConnection();
         $this->carPark = new CarPark($this->db);
+
     }
 
-    public function testCheckAvailability()
+    /**
+     * @dataProvider availabilityDataProvider
+     */
+    public function testCheckAvailability($from, $to, $expected)
     {
-        $availableSpaces = $this->carPark->checkAvailability('2023-11-01', '2023-11-10');
-        $this->assertIsInt($availableSpaces);
+        $result = $this->carPark->checkAvailability($from, $to);
+        $this->assertEquals($expected, $result['data']['available_spaces']);
     }
 
-    public function testGetPricing()
+    public function availabilityDataProvider()
     {
-        $pricing = $this->carPark->getPricing('2023-11-01', '2023-11-10');
-        
-        //output $pricing in the console
-        print_r($pricing);
-        $this->assertIsArray($pricing);
-        $this->assertArrayHasKey('weekday_price', $pricing);
-        $this->assertArrayHasKey('weekend_price', $pricing);
-        $this->assertArrayHasKey('weekday_count', $pricing);
-        $this->assertArrayHasKey('weekend_count', $pricing);
-        $this->assertArrayHasKey('total_price', $pricing);
+        return [
+            ['2023-11-01', '2023-11-10', 0]
+           
+        ];
+    }
 
+    /**
+     * @dataProvider pricingDataProvider
+     */
+    public function testGetPricing($from, $to, $expected)
+    {
+        $result = $this->carPark->getPricing($from, $to)['data'];
+        $this->assertEquals($expected, $result);
+    }
+
+    public function pricingDataProvider()
+    {
+        return [
+            ['2023-11-01', '2023-11-10', [
+                'weekday_count' => 7,
+                'weekend_count' => 3,
+                'weekday_price' => 10,
+                'weekend_price' => 15,
+                'total_price' => 105
+            ]],
+     
+        ];
     }
 
     public function testCreateBooking()
     {
-        $bookingId = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
-        $this->assertIsInt($bookingId);
+        $result = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
+        $this->assertEquals('success', $result['status']);
     }
 
     public function testCancelBooking()
     {
-        $bookingId = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
-        $rowsAffected = $this->carPark->cancelBooking($bookingId);
-        $this->assertEquals(1, $rowsAffected);
+        $createResult = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
+        $bookingId = $createResult['data']['booking_id'];
+        $cancelResult = $this->carPark->cancelBooking($bookingId);
+        $this->assertEquals('success', $cancelResult['status']);
     }
 
     public function testAmendBooking()
     {
-        $bookingId = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
-        $rowsAffected = $this->carPark->amendBooking($bookingId, '2023-11-02', '2023-11-09');
-        $this->assertEquals(1, $rowsAffected);
+        $createResult = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
+        $bookingId = $createResult['data']['booking_id'];
+        $amendResult = $this->carPark->amendBooking($bookingId, '2023-11-02', '2023-11-09');
+        $this->assertEquals('success', $amendResult['status']);
     }
 
     protected function tearDown(): void
     {
         $this->db = null;
         $this->carPark = null;
+
+
     }
 }
 ?>

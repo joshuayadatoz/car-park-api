@@ -150,10 +150,12 @@ class CarPark {
         $stmt->execute([':date_from' => $date_from, ':date_to' => $date_to, ':car_plate' => $car_plate, ':price' => $price]);
         
         //check if the booking was created successfully
+        //get the booking id
+        $booking_id = $this->conn->lastInsertId();
         if ($stmt->rowCount() <= 0) {
             return $this->handleError('An error occurred while creating the booking');
         }else{
-            return $this->formatResponse('success', 'Booking created successfully');
+            return $this->formatResponse('success', 'Booking created successfully', ['booking_id' => $booking_id]);
         }
     }
 

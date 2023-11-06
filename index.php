@@ -13,10 +13,10 @@ $action = $_GET['action'];
 
 //http://localhost/car-park-api/index.php?action=getPricing&from=2023-11-01&to=2023-11-10
 //http://localhost/car-park-api/index.php?action=createBooking&from=2023-11-01&to=2023-11-10&car_plate=ABC123
-//http://localhost/car-park-api/index.php?action=cancelBooking&booking_id=1
-//http://localhost/car-park-api/index.php?action=amendBooking&booking_id=1&new_from=2023-11-02&new_to=2023-11-09
+//http://localhost/car-park-api/index.php?action=cancelBooking&booking_id=24
+//http://localhost/car-park-api/index.php?action=amendBooking&booking_id=10&new_from=2023-11-02&new_to=2023-11-09
 //http://localhost/car-park-api/index.php?action=checkAvailability&from=2023-11-01&to=2023-11-10
-//http://localhost/car-park-api/index.php?action=checkBookingStatus&booking_id=1
+//http://localhost/car-park-api/index.php?action=checkBookingStatus&booking_id=8
 //http://localhost/car-park-api/index.php?action=dailyAvailability&date=2023-11-01
 //http://localhost/car-park-api/index.php?action=dailyAvailabilityByRange&from=2023-11-01&to=2023-11-10
 
