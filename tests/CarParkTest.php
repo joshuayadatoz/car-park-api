@@ -2,80 +2,74 @@
 require 'vendor/autoload.php';
 use CarParkAPI\CarPark; 
 use CarParkAPI\Database; 
+use CarParkAPI\Utils\DatabaseHandler;
 use PHPUnit\Framework\TestCase;
 
 class CarParkTest extends TestCase
 {
     private $db;
     private $carPark;
+    private $dbHandlerMock;
 
     protected function setUp(): void
     {
-        $database = new Database();
-        $this->db = $database->getConnection();
-        $this->carPark = new CarPark($this->db);
+        $this->dbHandlerMock = $this->getMockBuilder(DatabaseHandler::class)
+                                     ->disableOriginalConstructor()
+                                     ->getMock();
+
+      
+        $this->dbHandlerMock->method('checkAvailability')
+                            ->willReturn(1);
+        $this->dbHandlerMock->method('getPricing')
+                            ->willReturn(["weekday_count"=>8,"weekend_count"=>2,"weekday_price"=>"20.00","weekend_price"=>"25.00","total_price"=>210]);
+        $this->dbHandlerMock->method('cancelBooking')
+                            ->willReturn(["status"=>"success","message"=>"Booking cancelled successfully"]);
+
+        $this->carPark = new CarPark($this->dbHandlerMock);
 
     }
 
-    /**
-     * @dataProvider availabilityDataProvider
-     */
-    public function testCheckAvailability($from, $to, $expected)
+
+    public function testCheckAvailability()
     {
-        $result = $this->carPark->checkAvailability($from, $to);
-        $this->assertEquals($expected, $result['data']['available_spaces']);
+          $result = $this->carPark->checkAvailability('2025-11-01', '2025-11-10');
+          $this->assertEquals(9, $result["data"]['available_spaces']);
     }
 
-    public function availabilityDataProvider()
+    public function testGetPricing()
     {
-        return [
-            ['2023-11-01', '2023-11-10', 0]
-           
-        ];
+        $result = $this->carPark->getPricing("2025-11-01","2025-11-10");
+        $this->assertEquals(210, $result["data"]["pricing"]["total_price"]);
     }
-
-    /**
-     * @dataProvider pricingDataProvider
-     */
-    public function testGetPricing($from, $to, $expected)
-    {
-        $result = $this->carPark->getPricing($from, $to)['data'];
-        $this->assertEquals($expected, $result);
-    }
-
-    public function pricingDataProvider()
-    {
-        return [
-            ['2023-11-01', '2023-11-10', [
-                'weekday_count' => 7,
-                'weekend_count' => 3,
-                'weekday_price' => 10,
-                'weekend_price' => 15,
-                'total_price' => 105
-            ]],
-     
-        ];
-    }
-
     public function testCreateBooking()
     {
-        $result = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
+
+        $this->dbHandlerMock->method('insertBooking')
+        ->willReturn( ["status"=>"success","message"=>"Booking created successfully","data"=>["booking_id"=>"34"]]);
+        $result = $this->carPark->createBooking('2025-04-01', '2025-04-10', 'ABC123');
+      
         $this->assertEquals('success', $result['status']);
     }
 
     public function testCancelBooking()
     {
-        $createResult = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
-        $bookingId = $createResult['data']['booking_id'];
-        $cancelResult = $this->carPark->cancelBooking($bookingId);
+        $this->dbHandlerMock->method('getBookingStatus')
+        ->willReturn(['status' => 'success', 'data' => ['booking_status' => 'booked']]);
+        $this->dbHandlerMock->method('cancelBooking')
+        ->willReturn(['status' => 'success', 'message' => "Booking cancelled successfully"]); 
+
+      
+        $cancelResult = $this->carPark->cancelBooking(9);
         $this->assertEquals('success', $cancelResult['status']);
     }
 
     public function testAmendBooking()
     {
-        $createResult = $this->carPark->createBooking('2023-11-01', '2023-11-10', 'ABC123');
-        $bookingId = $createResult['data']['booking_id'];
-        $amendResult = $this->carPark->amendBooking($bookingId, '2023-11-02', '2023-11-09');
+        $this->dbHandlerMock->method('checkAvailability')
+        ->willReturn(2);
+        $this->dbHandlerMock->method('updateBooking')
+        ->willReturn(['status' => 'success', 'message' => "Booking amended successfully"]); 
+        $amendResult = $this->carPark->amendBooking(23, '2025-04-02', '2025-04-07');
         $this->assertEquals('success', $amendResult['status']);
     }
 

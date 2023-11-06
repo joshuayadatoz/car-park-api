@@ -1,7 +1,8 @@
 {
     "autoload": {
         "psr-4": {
-            "CarParkAPI\\": "classes/"
+            "CarParkAPI\\": "classes/",
+            "CarParkAPI\\Utils\\": "utils/"
         }
     },
     "require-dev": {
